@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramadan Iftar Time</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    text-align:center;
+}
+
+.container{
+    background:rgba(255,255,255,0.1);
+    padding:40px;
+    border-radius:20px;
+    backdrop-filter:blur(15px);
+    width:90%;
+    max-width:500px;
+    box-shadow:0 0 30px rgba(0,0,0,0.5);
+}
+
+h1{
+    font-size:28px;
+}
+
+.time{
+    font-size:40px;
+    font-weight:700;
+}
+
+.countdown{
+    margin-top:20px;
+    font-size:24px;
+    color:#ffd700;
+    font-weight:bold;
+}
+
+.location{
+    margin-top:10px;
+    font-size:14px;
+    opacity:0.8;
+}
+
+footer{
+    margin-top:20px;
+    font-size:13px;
+    opacity:0.7;
+}
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    background:#ffd700;
+    cursor:pointer;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🌙 Live Iftar Time</h1>
+    <div class="time" id="iftarTime">Loading...</div>
+    <div class="countdown" id="countdown"></div>
+    <div class="location" id="location"></div>
+    <button onclick="getLocation()">Refresh Location</button>
+    <footer>Made by Nehal ❤️</footer>
+</div>
+
+<script>
+let todayIftar;
+
+function getLocation(){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(fetchPrayerTime);
+    } else {
+        alert("Geolocation not supported.");
+    }
+}
+
+function fetchPrayerTime(position){
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    document.getElementById("location").innerHTML =
+        "Lat: " + lat.toFixed(2) + " | Lon: " + lon.toFixed(2);
+
+    fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=1`)
+    .then(response => response.json())
+    .then(data => {
+        todayIftar = data.data.timings.Maghrib;
+        document.getElementById("iftarTime").innerHTML =
+            "Today Iftar: " + todayIftar;
+        startCountdown();
+    });
+}
+
+function startCountdown(){
+    setInterval(() => {
+        const now = new Date();
+        const [hour,minute] = todayIftar.split(":");
+
+        const iftar = new Date();
+        iftar.setHours(hour);
+        iftar.setMinutes(minute);
+        iftar.setSeconds(0);
+
+        const diff = iftar - now;
+
+        if(diff > 0){
+            const h = Math.floor(diff / (1000*60*60));
+            const m = Math.floor((diff%(1000*60*60))/(1000*60));
+            const s = Math.floor((diff%(1000*60))/1000);
+
+            document.getElementById("countdown").innerHTML =
+                h+"h "+m+"m "+s+"s left";
+        }else{
+            document.getElementById("countdown").innerHTML =
+                "Iftar Time! 🌙";
+        }
+    },1000);
+}
+
+getLocation();
+</script>
+
+</body>
+</html>
